@@ -53,7 +53,7 @@ nav:
   - Examples: examples.md
 
 markdown_extensions:
-  - admonitions
+  - admonition
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.tabbed:

@@ -80,28 +80,9 @@ hmwrapper calendar export --month 2026-03
 | `scheduler` | `SchedulerAPI` | Fetch calendar events, session keepalive |
 | `admin` | `AdminAPI` | Activity types, pricing, audit logs, reports |
 
-## Comparison
-
-| Feature | HMWrapper | [HallmasterAPI](https://github.com/mattl1598/HallmasterAPI) |
-|---------|-----------|------|
-| Authentication | Full login + session management | None (public endpoints only) |
-| Bookings (read) | Yes | Yes |
-| Bookings (create/edit/delete) | Yes | No |
-| Availability checking | Yes | No |
-| Cost calculation | Yes | No |
-| Customers | Yes | No |
-| Rooms | Yes | Partial |
-| Admin/Pricing | Yes | No |
-| Audit logs | Yes | No |
-| Typed models | Yes (dataclasses) | Basic |
-| Session persistence | Yes (JSON) | No |
-| Retry logic | Yes (exponential backoff) | No |
-| CLI tool | Yes | No |
-| Endpoints covered | 25+ | 3 |
-
 ## Documentation
 
-Full documentation including reverse-engineered API reference available at the [docs site](https://jay.github.io/hmwrapper).
+Full documentation including reverse-engineered API reference available at the [docs site](https://jameswburke87.github.io/HMWrapper/).
 
 ## License
 
