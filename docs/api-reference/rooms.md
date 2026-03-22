@@ -1,0 +1,3 @@
+# RoomsAPI
+
+::: hmwrapper.rooms.RoomsAPI

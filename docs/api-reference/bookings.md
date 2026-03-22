@@ -1,0 +1,3 @@
+# BookingsAPI
+
+::: hmwrapper.bookings.BookingsAPI

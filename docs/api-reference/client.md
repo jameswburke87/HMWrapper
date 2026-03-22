@@ -1,0 +1,3 @@
+# HallmasterClient
+
+::: hmwrapper.client.HallmasterClient
