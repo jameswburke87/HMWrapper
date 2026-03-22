@@ -53,18 +53,16 @@ if price_rates:
 
 # 5. Create booking (UNCOMMENT TO ACTUALLY CREATE)
 # customers = customers_api.list_customers()
-# booking_data = {
-#     "BookingName": "Test Booking",
-#     "StartDateTime": start,
-#     "EndDateTime": end,
-#     "CustomerId": customers[0].id,
-#     "Rooms": [room_id],
-#     "ActivityTypeId": activity_types[0].id,
-#     "PriceRateId": price_rates[0].id,
-#     "StatusId": "Requested",
-#     "IsRecurring": False,
-# }
-# result = bookings_api.create_booking(booking_data)
+# result = bookings_api.create_booking(
+#     name="Test Booking",
+#     start=start,
+#     end=end,
+#     room_ids=[room_id],
+#     customer_id=customers[0].id,
+#     activity_type_id=activity_types[0].id,
+#     price_rate_id=price_rates[0].id,
+#     status="Requested",
+# )
 # print(f"  Created: {result.status_code}")
 
 client.close()

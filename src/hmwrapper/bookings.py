@@ -149,15 +149,89 @@ class BookingsAPI:
         html = self.client.get_html("/Admin/Bookings/Create")
         return self._parse_form_fields(html)
 
-    def create_booking(self, data: dict) -> Any:
-        """Create a new booking via MVC form POST.
+    def create_booking(
+        self,
+        name: str,
+        start: str,
+        end: str,
+        room_ids: list[int],
+        customer_id: str,
+        activity_type_id: int,
+        price_rate_id: int,
+        status: str = "Requested",
+        send_emails: bool = False,
+        **extra: Any,
+    ) -> Any:
+        """Create a new booking.
+
+        Fetches the create form for the anti-forgery token and room list,
+        then submits with browser-compatible field encoding.
 
         Args:
-            data: Form field dict — must include BookingName, StartDateTime,
-                  EndDateTime, CustomerId, Rooms, ActivityTypeId,
-                  PriceRateId, StatusId, etc.
+            name: Booking name/title.
+            start: Start datetime (ISO format, e.g. "2026-03-22T14:00:00").
+            end: End datetime (ISO format).
+            room_ids: List of room IDs to book.
+            customer_id: Customer GUID.
+            activity_type_id: Activity type ID.
+            price_rate_id: Price rate ID.
+            status: Booking status — "Requested" or "Confirmed".
+            send_emails: Whether to send notification emails.
+            **extra: Additional form fields (e.g. Description, AdminNotes).
         """
-        r = self.client.post_form("/Admin/Bookings/Create", data=data)
+        from .rooms import RoomsAPI
+
+        # Get form for token and session state
+        form = self.get_create_form()
+
+        # Get all rooms to build indexed room fields
+        all_rooms = RoomsAPI(self.client).list_rooms()
+        selected = set(room_ids)
+
+        # Build room fields with ASP.NET MVC indexed binding
+        room_fields = {}
+        for i, room in enumerate(all_rooms):
+            room_fields[f"BookingRoom[{i}].RoomId"] = str(room.id)
+            if room.id in selected:
+                room_fields[f"BookingRoom[{i}].Selected"] = "true"
+
+        form.update(room_fields)
+        form.update({
+            "Name": name,
+            "StartDate": start,
+            "EndDate": end,
+            "CustomerId": customer_id,
+            "ActivityTypeId": str(activity_type_id),
+            "PriceRateId": str(price_rate_id),
+            "BookingStatusId": status,
+            "SendEmails": str(send_emails).lower(),
+            **extra,
+        })
+
+        # Submit using the token already in the form (don't fetch a new one)
+        from urllib.parse import quote
+        url = f"{self.client.BASE}/Admin/Bookings/Create"
+        parts = []
+        for key, val in form.items():
+            encoded_key = quote(str(key), safe=".")
+            parts.append(f"{encoded_key}={quote(str(val), safe='')}")
+        body = "&".join(parts)
+
+        r = self.client.session.post(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Referer": url,
+                "Origin": self.client.BASE,
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1",
+            },
+            allow_redirects=True,
+        )
         return r
 
     def get_edit_form(self, booking_id: int) -> dict[str, str]:
@@ -165,9 +239,44 @@ class BookingsAPI:
         html = self.client.get_html(f"/Admin/Bookings/Edit/{booking_id}")
         return self._parse_form_fields(html)
 
-    def edit_booking(self, booking_id: int, data: dict) -> Any:
-        """Edit an existing booking via MVC form POST."""
-        r = self.client.post_form(f"/Admin/Bookings/Edit/{booking_id}", data=data)
+    def edit_booking(self, booking_id: int, updates: dict) -> Any:
+        """Edit an existing booking.
+
+        Fetches the current form values, merges in updates, and submits
+        with browser-compatible encoding to avoid WAF rejection.
+
+        Args:
+            booking_id: ID of the booking to edit.
+            updates: Dict of fields to change (e.g. Name, StartDate, EndDate,
+                     BookingStatusId). Unspecified fields keep their current values.
+        """
+        # Get current form values (includes token)
+        form = self.get_edit_form(booking_id)
+        form.update(updates)
+
+        from urllib.parse import quote
+        url = f"{self.client.BASE}/Admin/Bookings/Edit/{booking_id}"
+        parts = []
+        for key, val in form.items():
+            encoded_key = quote(str(key), safe=".")
+            parts.append(f"{encoded_key}={quote(str(val), safe='')}")
+        body = "&".join(parts)
+
+        r = self.client.session.post(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Referer": url,
+                "Origin": self.client.BASE,
+                "sec-fetch-dest": "document",
+                "sec-fetch-mode": "navigate",
+                "sec-fetch-site": "same-origin",
+                "sec-fetch-user": "?1",
+                "upgrade-insecure-requests": "1",
+            },
+            allow_redirects=True,
+        )
         return r
 
     def view_booking(self, booking_id: int) -> str:

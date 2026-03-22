@@ -118,7 +118,7 @@ class Customer:
     @classmethod
     def from_api(cls, data: dict) -> Customer:
         return cls(
-            id=data.get("UserId") or data.get("Id", ""),
+            id=data.get("UserId") or data.get("ID") or data.get("Id", ""),
             name=data.get("Name") or data.get("FullName", ""),
             email=data.get("Email", ""),
             phone=data.get("Phone") or data.get("PhoneNumber", ""),
@@ -184,7 +184,7 @@ class ActivityType:
     @classmethod
     def from_api(cls, data: dict) -> ActivityType:
         return cls(
-            id=data.get("Id", 0),
+            id=data.get("ID") or data.get("Id", 0),
             name=data.get("Name", ""),
             hall_id=data.get("HallId", 0),
             raw=data,
@@ -209,7 +209,7 @@ class PriceRate:
     @classmethod
     def from_api(cls, data: dict) -> PriceRate:
         return cls(
-            id=data.get("Id", 0),
+            id=data.get("ID") or data.get("Id", 0),
             name=data.get("Name", ""),
             hall_id=data.get("HallId", 0),
             raw=data,

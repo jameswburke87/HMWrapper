@@ -38,6 +38,9 @@ htmlcov/
 # Docs build output
 site/
 
+# Scratch / local testing
+scratch/
+
 # IDE
 .vscode/
 .idea/

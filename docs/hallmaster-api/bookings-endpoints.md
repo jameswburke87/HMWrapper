@@ -111,7 +111,11 @@ POST /Admin/Bookings/Create
 Content-Type: application/x-www-form-urlencoded
 ```
 
-**Required fields:** `BookingName`, `StartDateTime`, `EndDateTime`, `CustomerId`, `Rooms`, `ActivityTypeId`, `PriceRateId`, `StatusId`, `__RequestVerificationToken`
+**Required fields:** `Name`, `StartDate`, `EndDate`, `CustomerId`, `ActivityTypeId`, `PriceRateId`, `BookingStatusId`, `__RequestVerificationToken`
+
+**Room selection:** Rooms use ASP.NET MVC indexed model binding. For each room available at the venue, include `BookingRoom[i].RoomId` with the room ID. For the room(s) being booked, also include `BookingRoom[i].Selected=true`.
+
+**Important:** Bracket characters in field names (`[`, `]`) must be percent-encoded as `%5B`/`%5D` in the POST body, or the server's WAF will reject the request with a connection reset. The `sec-fetch-*` browser headers should also be included.
 
 ## Edit Booking (MVC Form)
 

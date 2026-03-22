@@ -136,9 +136,18 @@ class HallmasterClient:
 
     def _get_token(self) -> str:
         """Get a fresh anti-forgery token for POST requests."""
-        r = self.session.get(f"{self.BASE}/Admin/Dashboard/Index/{self.hall_id}")
-        r.raise_for_status()
-        return self._extract_token(r.text)
+        # Try the admin bookings page first, fall back to login page
+        for path in [
+            f"/Admin/Bookings/Index/{self.hall_id}",
+            "/Account/Login",
+        ]:
+            r = self.session.get(f"{self.BASE}{path}")
+            if r.status_code == 200:
+                try:
+                    return self._extract_token(r.text)
+                except TokenError:
+                    continue
+        raise TokenError("Could not obtain anti-forgery token from any page")
 
     def _save_session(self) -> None:
         """Persist session cookies to disk as JSON."""
@@ -221,9 +230,39 @@ class HallmasterClient:
         return r
 
     def post_form(self, path: str, data: dict, **kwargs: Any) -> requests.Response:
-        """POST an MVC form with anti-forgery token embedded in form data."""
+        """POST an MVC form with anti-forgery token embedded in form data.
+
+        Encodes the form body as a pre-built string with bracket characters
+        percent-encoded (%5B/%5D) to avoid WAF rejection, and includes
+        sec-fetch headers to match browser behaviour.
+        """
         token = self._get_token()
         data = {**data, "__RequestVerificationToken": token}
-        r = self._request_with_retry("POST", f"{self.BASE}{path}", data=data, **kwargs)
+        url = f"{self.BASE}{path}"
+        headers = kwargs.pop("headers", {})
+        headers.setdefault("Referer", url)
+        headers.setdefault("Origin", self.BASE)
+        headers.setdefault("Content-Type", "application/x-www-form-urlencoded")
+        headers.setdefault("sec-fetch-dest", "document")
+        headers.setdefault("sec-fetch-mode", "navigate")
+        headers.setdefault("sec-fetch-site", "same-origin")
+        headers.setdefault("sec-fetch-user", "?1")
+        headers.setdefault("upgrade-insecure-requests", "1")
+
+        # Encode form body manually — the server's WAF rejects literal
+        # brackets in field names (e.g. BookingRoom[0].RoomId), so we
+        # must percent-encode them as %5B/%5D in the raw body.
+        from urllib.parse import quote
+        parts = []
+        for key, val in data.items():
+            encoded_key = quote(str(key), safe=".")
+            if isinstance(val, list):
+                for v in val:
+                    parts.append(f"{encoded_key}={quote(str(v), safe='')}")
+            else:
+                parts.append(f"{encoded_key}={quote(str(val), safe='')}")
+        body = "&".join(parts)
+
+        r = self._request_with_retry("POST", url, data=body, headers=headers, **kwargs)
         r.raise_for_status()
         return r
