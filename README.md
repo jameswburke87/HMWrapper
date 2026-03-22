@@ -4,6 +4,8 @@ Python client for the [HallMaster](https://www.hallmaster.co.uk/) venue booking 
 
 HallMaster is a widely-used platform for managing community hall and venue bookings. While it provides no official public API, HMWrapper offers a clean, typed Python interface built on reverse-engineered internal endpoints.
 
+> **Warning:** This library can create, edit, and delete real bookings and customer data. It interacts directly with your live HallMaster account — there is no sandbox or test environment. Always test against a venue you don't mind making changes to, and double-check any write operations before running them in production.
+
 ## Features
 
 - Full authenticated access (cookie-based ASP.NET session + anti-forgery tokens)

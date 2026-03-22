@@ -1,5 +1,8 @@
 # Getting Started
 
+!!! warning
+    This library can create, edit, and delete real bookings and customer data. It interacts directly with your live HallMaster account — there is no sandbox or test environment. Always test against a venue you don't mind making changes to, and double-check any write operations before running them in production.
+
 ## Installation
 
 ```bash
